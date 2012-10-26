@@ -2,7 +2,7 @@
 
 # Root dir, typically, your DocumentRoot 
 # (f)cgi scripts find it in their environment but
-# the stand-alone webserver and the search engine need it
+# the stand-alone webserver needs it
 root = "/home/neysx/gentoo.org/gentoo/xml/htdocs"
 
 # Make webrick listen on given IP (IP onlyu, no host name)
@@ -108,15 +108,6 @@ accessLog = "syslog"
 
 # Listen on port (must be >1023 to be run by non-root)
 port = 8008
-
-#
-# Search engine parameters
-#
-
-# Connect string, only mysql is supported at the moment
-dbConnect  = DBI:mysql:DB_NAME:HOST_NAME
-dbUser     = USENAME
-dbPassword = PASSWORD
 
 # Document language can be guessed from the document itself with
 # an XPath expression. It should return the language code.

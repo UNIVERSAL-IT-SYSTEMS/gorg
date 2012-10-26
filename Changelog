@@ -123,3 +123,10 @@
            
 2012-10-26 gorg-0.6.5 Maintenance release
             . Compatibility fixes for Ruby 1.9
+
+======================================================
+
+2012-..-.. gorg-... 
+            . Remove search support. It is not used on gentoo.org, and
+	      it depends on the obsolete dbi code which does not work
+	      with Ruby 1.9.

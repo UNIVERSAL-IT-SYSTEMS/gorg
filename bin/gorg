@@ -49,7 +49,6 @@ Available options:
                     NB: relative paths in xml are from current directory
                         absolute paths are from {root} in config file
 -v, --version     : display gorg version number
--I, --index       : scan and index xml files
 --param N V       : parameter name and value to be passed to the XSL processor
                     It can appear more than once
                     e.g. gorg<file.xml --param N1 V1 --param N2 V2
@@ -67,12 +66,6 @@ if ARGV.length == 1  and  ['-W', '--web'].include?(ARGV[0]) then
 elsif ARGV.length == 1  and  ['-C', '--clean-cache'].include?(ARGV[0]) then
   # Cache clean up requested, do not bother about STDIN
   Cache.washCache($Config["cacheDir"], tmout=900, cleanTree=true)
-elsif ARGV.length == 1  and  ['-I', '--index'].include?(ARGV[0]) then
-  require 'gorg/search'
-  # Index xml files, do not bother about STDIN
-  gs = GDig::GSearch.new
-  gs.cleanup   # Remove old files
-  gs.indexDir  # Scan for new/modified files
 elsif ARGV.include?('-F') or ARGV.include?('--filter') or not STDIN.tty?
   # Be a filter by default when data is piped to gorg
   # or when -F, --filter is used
