@@ -5,7 +5,7 @@
 # the stand-alone webserver needs it
 root = "/home/neysx/gentoo.org/gentoo/xml/htdocs"
 
-# Make webrick listen on given IP (IP onlyu, no host name)
+# Make webrick listen on given IP (IP only, no host name)
 listen = 127.0.0.1
 
 # Mount paths that are not under the root directory (used by stand-alone web server only)
