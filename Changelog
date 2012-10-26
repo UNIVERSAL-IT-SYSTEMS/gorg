@@ -118,3 +118,8 @@
               when cache store fails, e.g. no cache dir or not writable
             . Add Listen parameter to make stand-alone webserver listen on
               given address, 127.0.0.1 is the default value
+
+======================================================
+           
+2012-10-26 gorg-0.6.5 Maintenance release
+            . Compatibility fixes for Ruby 1.9
