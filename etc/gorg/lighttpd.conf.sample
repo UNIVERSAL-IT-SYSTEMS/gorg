@@ -1,0 +1,118 @@
+# Example lighttpd.conf for Gorg
+
+var.basedir  = "/var/www/www.gentoo.org"
+var.logdir   = "/var/log/lighttpd"
+var.statedir = "/var/lib/lighttpd"
+var.cache    = "/var/cache/gorg"
+
+server.modules = (
+#    "mod_rewrite",
+#    "mod_redirect",
+    "mod_alias",
+    "mod_access",
+#    "mod_status",
+#    "mod_setenv",
+#    "mod_userdir",
+    "mod_compress",
+    "mod_accesslog"
+)
+
+include "mime-types.conf"
+
+server.username      = "lighttpd"
+server.groupname     = "lighttpd"
+
+server.document-root = var.basedir + "/htdocs"
+server.pid-file      = "/var/run/lighttpd.pid"
+
+server.errorlog      = var.logdir  + "/error.log"
+accesslog.filename   = var.logdir + "/access.log"
+accesslog.format = "%h %t \"%r\" %b %s %T \"%{User-Agent}i\" \"%{Referer}i\" %I %O"
+
+server.indexfiles    = ("index.xml", "index.html" )
+
+server.tag           = "Lightppd 1.4.8/Gentoo 2006.0"
+
+server.follow-symlink = "enable"
+
+server.port          = 80
+
+server.errorfile-prefix    = var.basedir + "/errors/"
+
+static-file.exclude-extensions = (".cgi", ".fcgi")
+
+dir-listing.activate      = "disable"
+dir-listing.hide-dotfiles = "enable"
+dir-listing.exclude = ("^\.", "~$", "\.\.")
+
+url.access-deny = ("~", ".inc")
+
+# userdir.path = "public_html"
+# userdir.exclude-user = ("root")
+
+# ssl.engine    = "enable"
+# ssl.pemfile   = "server.pem"
+
+# status.status-url  = "/server-status"
+# status.config-url  = "/server-config"
+
+compress.cache-dir   = var.cache
+compress.filetype    = ("text/plain", "text/html", "text/css")
+
+$HTTP["url"] =~ "^/xsl/" {
+  url.access-deny = ( ".xsl" )
+}
+
+$HTTP["url"] =~ "^/dyn/doc-snapshots/" {
+  dir-listing.activate = "enable"
+}
+
+# url.rewrite = (
+#	"^/$"		=>		"/server-status"
+# )
+
+# url.redirect = (
+#	"^/wishlist/(.+)"		=>		"http://www.123.org/$1"
+# )
+
+server.modules += ("mod_cgi")
+alias.url = ( "/cgi-bin/" => var.basedir + "/cgi-bin/"
+)
+
+$HTTP["url"] =~ "^/cgi-bin/" {
+    # disable directory listings
+    dir-listing.activate = "disable"
+    # only allow cgi's in this directory
+    cgi.assign = ( ".cgi"	=>	"" )
+}
+
+server.modules += ("mod_fastcgi")
+fastcgi.debug = 0
+fastcgi.server = (
+       ".xml" =>
+			    ( "localhost" =>
+				    (
+					    "host"	=>	"127.0.0.1",
+					    "port"	=>	1026,
+					    "bin-path"	=>	"/var/www/www.gentoo.org/fcgi-bin/gorg.fcgi",
+					    "idle-timeout" =>   60,
+					    "broken-scriptfilename" => "enable",
+					    "bin-environment" => ( "GORG_CONF" => "/etc/gorg/gorg.conf" ),
+					    "max-procs" =>      5,
+					    "min-procs" =>      1
+				    )
+			    ),
+       ".rss" =>
+			    ( "localhost" =>
+				    (
+					    "host"	=>	"127.0.0.1",
+					    "port"	=>	1026,
+					    "bin-path"	=>	"/var/www/www.gentoo.org/fcgi-bin/gorg.fcgi",
+					    "idle-timeout" =>   60,
+					    "broken-scriptfilename" => "enable",
+					    "bin-environment" => ( "GORG_CONF" => "/etc/gorg/gorg.conf" ),
+					    "max-procs" =>      5,
+					    "min-procs" =>      1
+				    )
+			    )
+		    )

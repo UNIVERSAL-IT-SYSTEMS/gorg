@@ -1,0 +1,152 @@
+<VirtualHost www.mygentoo.org>
+ServerName www.mygentoo.org
+ServerAlias mygentoo
+DocumentRoot /var/www/www.mygentoo.org/htdocs
+ServerAdmin webman@mygentoo.org
+LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" common
+CustomLog "| /usr/sbin/cronolog /var/log/apache/www.mygentoo.org/%Y%m%d.%Z.www.mygentoo.org.access-log"  common
+ErrorLog "| /usr/sbin/cronolog /var/log/apache/www.mygentoo.org/%Y%m%d.%Z.www.mygentoo.org.error-log"
+AddDefaultCharset utf-8
+
+<Directory /var/www/www.mygentoo.org/htdocs>
+  DirectoryIndex index.xml
+  Options +Includes -Indexes
+  AllowOverride All
+  Order Allow,Deny
+  Allow from all
+
+  # cgi mode
+  #Action gorg /cgi-bin/gorg.cgi
+
+  # fast cgi mode
+  Action gorg /fcgi-bin/gorg.fcgi
+
+  # process .xml and .rdf files through gorg
+  AddHandler gorg .xml
+  AddHandler gorg .rdf
+</Directory>
+
+ScriptAlias /cgi-bin/ /var/www/www.mygentoo.org/cgi-bin/
+Alias /fcgi-bin/ /var/www/www.mygentoo.org/fcgi-bin/
+
+# handle images and icons
+Alias /images /var/www/www.mygentoo.org/images
+Alias /icons /var/www/www.mygentoo.org/icons
+
+<Directory /var/www/www.mygentoo.org/images>
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+</Directory>
+
+<Directory /var/www/www.mygentoo.org/icons>
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+</Directory>
+
+<Directory /var/www/www.mygentoo.org/fcgi-bin>
+    AllowOverride All
+    Options ExecCGI
+    Order allow,deny
+    Allow from all
+      # You should use mod_fcgid, but just in case you insist on using mod_fastcgi:
+      #<IfModule mod_fastcgi.c>
+      #  SetHandler fastcgi-script
+      #</IfModule>
+    <IfModule mod_fcgid.c>
+      SetHandler fcgid-script
+    </IfModule>
+</Directory>
+
+<Directory /var/www/www.mygentoo.org/cgi-bin>
+    AllowOverride All
+    Options ExecCGI
+    Order allow,deny
+    Allow from all
+</Directory>
+
+</VirtualHost>
+
+
+# You should use mod_fcgid, but just in case you insist on using mod_fastcgi:
+#<IfModule mod_fastcgi.c>
+#  FastCgiServer /var/www/gorg/fcgi-bin/gorg.fcgi -processes 3 -restart-delay 1 -idle-timeout 300 -appConnTimeout 240
+#</IfModule>
+
+<IfModule mod_fcgid.c>
+  IdleTimeout 120
+  #IdleTimeout n (300 seconds)
+  #An idle fastcgi application will be terminated after IdleTimeout seconds.
+
+  IdleScanInterval 30
+  #IdleScanInterval n (120 seconds)
+  #The scan interval for idle fastcgi applications.
+
+  BusyTimeout 360
+  #BusyTimeout n (300 seconds)
+  #a fastcgi application will be terminated if handing a single request longer than busy timeout.
+
+  BusyScanInterval 60
+  #BusyScanInterval n (120 seconds)
+  #The scan interval for busy timeout fastcgi applications.
+
+  ErrorScanInterval 5
+  #ErrorScanInterval n (3 seconds)
+  #The scan interval for exit pending fastcgi applications.
+  #fastcgi applications will be terminated within this scanning.
+
+  ZombieScanInterval 5
+  #ZombieScanInterval n (3 seconds)
+  #The scan interval for zombie process. 
+
+  ProcessLifeTime 3000
+  #ProcessLifeTime n (3600 seconds)
+  #A fastcgi application will be terminated if lifetime expired, even no error is detected.
+
+  SocketPath /var/run
+  #SocketPath path (logs/fcgidsock)
+  #The directory to put the UNIX domain socket. (UNIX only)
+
+  SpawnScoreUpLimit 24
+  #SpawnScoreUpLimit n (10)
+      
+  #The spawn-speed control score up water limit.
+  #Score increases while a process is spawned or terminated, and decreases as time progresses;
+  #while the score is higher than SpawnScoreUpLimit, the spawning will be held for a while.
+  #The higher this number is, the higher speed of the spawning can be.
+
+  SpawnScore 3
+  #SpawnScore n (1)
+  #The weight of spawning.  This weight will be plused to the spawn-control score on every spawn.
+  #The higher this number is, the lower speed of spawning can be.
+
+  TerminationScore 1
+  #TerminationScore n (2)
+  #The weight of termination. This weight will be plused to the score while fastcgi process terminates.
+  #The higher this number is, the lower speed of spawning can be.
+
+  MaxProcessCount 16
+  #MaxProcessCount n (1000)
+  #The max count of total fastcgi process count.
+
+  DefaultMaxClassProcessCount 8
+  #DefaultMaxClassProcessCount n (100)
+  #The maximum number of fastcgi application instances
+  #allowed to run for any one fastcgi application. 
+
+  DefaultInitEnv GORG_CONF /etc/gorg/gorg.conf
+  #The default environment variables before a fastcgi application is spawned. You can set this configuration more than once.
+
+  IPCConnectTimeout 10
+  #IPCConnectTimeout n (2 seconds)
+  #The connect timeout to a fastcgi application.
+
+  IPCCommTimeout 90
+  #IPCCommTimeout n (5 seconds)
+  #The communication timeout to a fastcgi application.
+
+  OutputBufferSize 0
+  #OutputBufferSize n (64k bytes)
+  #CGI output cache buffer size. 
+</IfModule>

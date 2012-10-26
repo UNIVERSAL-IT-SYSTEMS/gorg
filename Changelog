@@ -1,0 +1,120 @@
+2004-12-06 gorg-0.3 initiated
+
+2004-12-07 http://bugs.gentoo.org/show_bug.cgi?id=73163 from Masatomo Nakano <nakano@gentoo.org>
+           Use PATH_TRANSLATED to resolve files in ~username
+
+2004-12-16 Issue Etag and Last-Modified response headers fields
+           Handle If-Modified-Since and If-None-Match request header fields
+           Client caching will work in a consistent manner across several web nodes
+           Set processed document mtime to latest mtime of dependent files and use it for Last-Modified
+           Use timeouts when accessing cache (clean & store operations)
+           Fork & Detach when cleaning up the cache
+           Fix bugs:
+             . in XSLT C extension when no document root is used
+             . empty request params prevent use of cache
+
+======================================================
+           
+2005-01-10 gorg-0.4 initiated
+
+2005-01-10  Update Caching:
+              . Use a dir tree under cache dir that is identical
+                to the server tree. Some installations seem
+                to have trouble with 30000+ files in one directory
+                New param cacheTree = 1 activates this behaviour
+              . Define MaxFiles param to limit number of files in one dir
+              . Server will only try to clean the dir it caches to
+              . Added -C (--clean-cache) option to gorg to clean whole cache tree with a cron job e.g.
+2005-01-10  Add filter functionality:
+              . Added -F (--filter) option to process STDIN
+                Both gorg and gorg.cgi can be used as a filter.
+                gorg.cgi needs the -F (--filter) option on its command line
+                gorg will behave as a filter when no option are used *and* data is piped into it
+              . Added -W (--web) Starting the web server is the default on the cmd line
+                but it might need to be told when not started interactively
+
+======================================================
+           
+2005-01-10 gorg-0.5 initiated
+
+2005-04-04  . Trivial code cleanup to get rid of signal catching that was introduced
+              before issues with mod_fastcgi and ruby-fcgi had been pinpointed.
+            . wasCash can be set to 0 to disable cache cleaning, use `gorg --clean-cache` to clean up
+            . xsl.c includes trivial patch that was applied the the -0.4.ebuild for 64-bit systems
+            . ebuild now knows apache and fastcgi USE flags to depend on apache and fastcgi (mod-fcgid) 
+
+======================================================
+           
+2005-07-04 gorg-0.6 initiated
+
+2005-07-04  . Pass parameter with path name of requested file (e.g. $link='/doc/en/index.xml')
+            . Fix segfault when using a string stylesheet instead of a file
+              (undocumented free in libxslt lead to a double free)
+            . Issue http header with  text/html, text/xml or application/xhtml+xml as content-type,
+              replace application/xhtml+xml with text/html if browser does not accept it
+            . Stand-alone web server (ie. webrick) fails (500) like the (f)cgi versions when lib(xslt|xml2) return a warning
+              It's just too confusing to have pages that work with "gorg &" generate errors once live with apache or lighttpd
+            . Make stand-alone web server use index automatically when requesting a dir and index.xml exists
+            . Add mount points for webrick (eg. for /cgi-bin or /images) to be handled by stock FileHandler (ie. not gorg)
+            . xsl extension returns messages output with xsl:message that begin with '%%GORG%%'
+            . Make xsl extension return requested remote file names (ftp:// & http://) and let
+              caller decide how to handle caching of those resources
+            . gorg has decided not to cache objects that request foreign URIs
+            . Allow cookies to be passed to transforms and transforms to set cookies with
+              xsl:message '%%GORG%%Set-Cookie(cookiename)key=value'
+              eg.  <xsl:message>
+                    <xsl:value-of select="concat('%%GORG%%Set-Cookie(prefs)SL=',$searchLang)"/>
+                   <xsl:message>
+              NOTE: Setting several cookies will not work properly in some cases with the stand-alone web server
+                    http://rubyforge.org/tracker/?func=detail&aid=2199&group_id=426&atid=1698
+              *Update* My patch has been accepted upstream and should make it into an upcoming ruby release
+            . Allow http redirect (301) with xsl:message '%%GORG%%Redirect=newURI'
+            . Add charset= to http header for xml files what have encoding="bleh"
+            . Deprecate zipCache param in favour of zipLevel (0-9) and add support for mod_gzip
+              zipLevel makes gorg compress cached data *and* returned data if client requests it (accept_encoding=gzip)
+              Decompressing compressed cached data to have it recompressed on output by apache with mod_deflate is a waste of CPU
+              Besides, gorg can now be used with web servers that do not support deflating dynamic data (eg. lighttpd)
+              In short, 0   == gorg does not compress data, neither in its cache nor its output
+                               Of course, you may use mod_deflate or similar to make your web server support gzip encoding
+                        1-9 == Compress data in cache and return zipped data if client supports it
+                               Make sure your web server does not waste time compressing the data again
+                               (apache looks clever enough and does not recompress as far as I know)
+            . Pass host value from HTTP header as httphost param to the stylesheet
+            . Return '<missing file="{filename}"/>' for missing files, no more
+              Error 500, can be tested by your xsl or just ignored
+            . Add search engine (uses mysql full text search)
+            . Documents created with exsl:document under / are created inside
+              the web site document root. Please note that the current directory
+              is undefined and that docs created without a leading '/' in their
+              path land wherever libxml2 decides to write them.
+
+======================================================
+           
+2006-05-11 gorg-0.6.1 Maintenance release
+            . chmod a+x search.cgi
+            . Fix xsl.c to stat() file and not prepend $DocRoot when file
+              exists. Apache expands ~username/file.xml to e.g.
+              /home/username/public_html/file.xml and it should be searched
+              under htdocs/...
+
+======================================================
+           
+2006-06-19 gorg-0.6.2 Maintenance release
+            . Fix xsl.c to prevent ruby exception on empty bodies
+
+======================================================
+           
+2006-09-15 gorg-0.6.3 Maintenance release
+            . Fix syntax error when looking for searched text and no text is
+              found. Why MySQL matches those is not clear to me yet.
+            . Don't bail out when cache dir is unusable. Just warn about it.
+            . Force httphost to configured value even when no host is passed
+
+======================================================
+           
+2009-10-17 gorg-0.6.4 Maintenance release
+            . Fix Gentoo bug #289391 : missing file triggers cache miss
+            . Fix bug with stand-alone webserver that returns empty content
+              when cache store fails, e.g. no cache dir or not writable
+            . Add Listen parameter to make stand-alone webserver listen on
+              given address, 127.0.0.1 is the default value

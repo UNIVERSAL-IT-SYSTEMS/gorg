@@ -1,0 +1,149 @@
+# /etc/gorg/gorg.conf: Configuration file for Gorg
+
+# Root dir, typically, your DocumentRoot 
+# (f)cgi scripts find it in their environment but
+# the stand-alone webserver and the search engine need it
+root = "/home/neysx/gentoo.org/gentoo/xml/htdocs"
+
+# Make webrick listen on given IP (IP onlyu, no host name)
+listen = 127.0.0.1
+
+# Mount paths that are not under the root directory (used by stand-alone web server only)
+# eg. to mount /cgi-bin which is usually not under the document root
+# Note: Those directories will be handled by the stock FileHandler, ie. not by gorg
+mount = /cgi-bin on /home/neysx/gentoo.org/gentoo/xml/cgi-bin
+mount = /images on /home/neysx/gentoo.org/gentoo/xml/images
+
+# Should gorg accept cookies and pass $param=$value to the xsl transform
+# Default is no (anything but 1 is no)
+acceptCookies = 1
+
+# Only read so many lines in xml files to identify stylesheets, use 0 to scan whole file 
+headXSL = 12
+
+# Default stylesheet, relative to root dir
+defaultXSL = "/xsl/guide.xsl"
+
+# Only used by fastCGI, auto exit after given number of requests (0 means no)
+# The fcgi process manager will restart a new instance automatically
+# NB: it will NOT exit before at least 1 full minute has elapsed even if you set a very low value
+# If you want a really short-lived version, use the cgi instead
+# mod_fcgid does its own process recycling and this feature will be obsoleted in an later version
+autoKill = 5000
+
+# Allow return of unprocessed xml file if passthru==(anything but 0) appears in URI params
+# 0==No, anything else==Yes
+passthru = 1
+
+# Pass pathname of requested file in named parameter to the xsl transform
+# [a-zA-Z]+ , anything else is ignored and no param is passed
+# Default is "link"
+linkParam = link
+
+# Pass a param named httphost to the style sheet (== host value from HTTP header)
+# 0 or nothing (default) disables this feature
+# * will pass the value as received from the user agent or none (http/1.0)
+# name alias1 alias2... will pass name when the value sent by the user agent
+#                       matches exactly any of name alias1 alias2...
+#                       if any alias is *, any value (even nil) will match and name will be passed
+# When no value matches, the value received from the user agent is passed
+#httphost = mysite www.mysite.org mysite.org alias.mysite.org
+
+# Cache directory. Directory must exist and be writable by whoever runs the server (e.g. apache)
+# It must also be writable by the user who runs the stand-alone web server, i.e. not the apache user
+# if you want to use both web servers. You can even run both at the same time.
+# Default is no cache
+cacheDir = "/var/cache/gorg"
+
+# Number of seconds after which a document is considered too old, 0=never
+# Can be used to force a refresh or to stress-test the system
+#cacheTTL = 86400 # 1 day
+cacheTTL = 864000 # or 10 days
+#cacheTTL = 600 # or 10 minutes....
+
+# Use a tree of directories under cacheDir that matches the site tree
+# Use when your system has problems coping with a huge single cache dir
+# 0 means no tree (all files in cacheDir) and is the default
+# If you use this, make sure you clean up the cache with gorg -C regularly
+cacheTree = 1
+
+# Max size of cache in megabytes
+# Please note that cacheSize is used ONLY when cleaning up either
+#    when cacheTree==0 and a clean-up is started based on cacheWash (see below)
+# or when cacheTree!=0 and `gorg -C` is run
+cacheSize = 250
+
+# Max number of files in a given cache directory
+# Please note that this limit is also enforced when cacheTree == 0
+# in which case it means the max total number of files in the whole cache
+maxFiles = 2000
+
+# Support gzip http encoding (ie. mod_deflate)
+# 0 means no compression *and* no support for gzip encoding.
+# 1-9 gives compression level, 1 least compressed, 9 max compressed
+# Cached pages use the same compression level
+# Default is 2
+zipLevel = 2
+
+# Clean cache automatically and regularly when a store into the cache occurs.
+# gorg cleans up if random(value) < 10, i.e.
+# Set to 0 to disable and rely on gorg --clean-cache being run regularly
+# a value<=10 means at every call,
+# 100 means 10 percent of stores will also clean the cache
+# 1000 means 10 permille (cacheSize will be checked only once every 100 stores)
+# Note: gorg only tries to clean the dir it caches to, not the whole cache tree
+# Use `gorg -C` or `gorg --clean-cache` to clean up whole cache
+cacheWash = 0
+
+# Level of logging that goes to syslog
+# OFF, FATAL, ERROR, WARN, INFO, DEBUG = 0, 1, 2, 3, 4, 5
+logLevel = 4
+
+#
+# Used only by stand-alone webserver
+#
+
+# Send hit stats to syslog/stderr/a file
+accessLog = "syslog"
+
+# Listen on port (must be >1023 to be run by non-root)
+port = 8008
+
+#
+# Search engine parameters
+#
+
+# Connect string, only mysql is supported at the moment
+dbConnect  = DBI:mysql:DB_NAME:HOST_NAME
+dbUser     = USENAME
+dbPassword = PASSWORD
+
+# Document language can be guessed from the document itself with
+# an XPath expression. It should return the language code.
+# Only the first 5 characters will be used.
+# For instance, to use a root element's lang attribute:
+xpath_to_lang = /*[1]/@lang
+
+# If no XPath is given or no lang is found, you can use the file path as a fallback:
+# define a regexp to apply to the file path, $1 must yield the language
+# For instance, the following one applied to '/doc/en/file.xml' returns 'en'
+fpath_to_lang = ^/[^/]+/([^/]+)/.*xml$
+
+# include/exclude directives will be processed in the order they appear below.
+# First match will be used to either include or exclude the file.
+# If no match is found, file is skipped
+# Each directive should define one and only one regexp
+# Beware, regexp are not shell globs, .xml means any character followed by xml anywhere in the file name
+# .+\.xml$  means one or more characters followed by a dot and ending with xml
+# Any file that can't be processed, ie. because it is not well-formed will not be indexed
+
+exclude = ^/proj/en/gdp/tests/
+exclude = /CVS/
+exclude = ^/xsl/
+exclude = /draft/
+exclude = ^/doc/.+/handbook/2004
+exclude = metadoc\.xml$
+exclude = /inserts-.+\.xml$
+exclude = ^/dyn/
+exclude = herds/pkgList.xml
+include = ^/.+\.xml$

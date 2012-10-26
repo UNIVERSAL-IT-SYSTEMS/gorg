@@ -1,0 +1,100 @@
+#! /usr/bin/ruby 
+
+###   Copyright 2004,   Xavier Neys   (neysx@gentoo.org)
+# #
+# #   This file is part of gorg.
+# #
+# #   gorg is free software; you can redistribute it and/or modify
+# #   it under the terms of the GNU General Public License as published by
+# #   the Free Software Foundation; either version 2 of the License, or
+# #   (at your option) any later version.
+# #
+# #   gorg is distributed in the hope that it will be useful,
+# #   but WITHOUT ANY WARRANTY; without even the implied warranty of
+# #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# #   GNU General Public License for more details.
+# #
+# #   You should have received a copy of the GNU General Public License
+# #   along with Foobar; if not, write to the Free Software
+###   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+# Nothing much to do at the moment
+# Just start the web server using webrick
+
+# Some cmd line options will be added when more features are added
+
+# If you are looking for the cgi, it is called gorg.cgi
+# The fcgi version is surprisingly called gorg.fcgi
+# Just copy it to your cgi-bin directory (or fcgi-bin) and
+# set up apache to use it against .xml files
+
+require 'gorg/base'
+
+include Gorg
+gorgInit
+
+
+def usage
+  puts <<EOS
+  
+gorg without any option will either start the web server or
+behave like a filter if data is piped into it.
+
+Available options:
+
+-C, --clean-cache : clean up the whole web cache
+-W, --web         : explicitely start the web server
+-F, --filter      : read xml on stdin, process and write result to stdout
+                    NB: relative paths in xml are from current directory
+                        absolute paths are from {root} in config file
+-v, --version     : display gorg version number
+-I, --index       : scan and index xml files
+--param N V       : parameter name and value to be passed to the XSL processor
+                    It can appear more than once
+                    e.g. gorg<file.xml --param N1 V1 --param N2 V2
+EOS
+end
+
+
+# Parse cmd-line options
+
+# Let's do it the easy way until we have more options
+if ARGV.length == 1  and  ['-W', '--web'].include?(ARGV[0]) then
+  # Explicit web server requested, do not bother about STDIN
+  require 'gorg/www'
+  www
+elsif ARGV.length == 1  and  ['-C', '--clean-cache'].include?(ARGV[0]) then
+  # Cache clean up requested, do not bother about STDIN
+  Cache.washCache($Config["cacheDir"], tmout=900, cleanTree=true)
+elsif ARGV.length == 1  and  ['-I', '--index'].include?(ARGV[0]) then
+  require 'gorg/search'
+  # Index xml files, do not bother about STDIN
+  gs = GDig::GSearch.new
+  gs.cleanup   # Remove old files
+  gs.indexDir  # Scan for new/modified files
+elsif ARGV.include?('-F') or ARGV.include?('--filter') or not STDIN.tty?
+  # Be a filter by default when data is piped to gorg
+  # or when -F, --filter is used
+  
+  # Scan command line for sequences of '--param paramName paramValue'
+  params = scanParams(ARGV)
+  # Only -F or --filter should remain in ARGV
+  # or nothing at all when piped data is available
+  if (ARGV.length == 1  and  ['-F', '--filter'].include?(ARGV[0]))  or  (ARGV.length == 0  and not STDIN.tty?) then
+    require 'gorg/cgi'
+    do_Filter(300, params) # timeout=5 minutes, default is less
+  else
+    usage
+  end
+elsif ARGV.length == 0 and STDIN.tty?
+  require 'gorg/www'
+  # No argument & no piped data: run the web server
+  www
+elsif ARGV.length > 1
+  usage
+elsif ARGV[0] == "-v" or ARGV[0] == "--version"
+  puts("Gorg version #{Version}")
+else
+  usage
+end

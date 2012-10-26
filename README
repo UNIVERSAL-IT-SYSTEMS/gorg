@@ -1,0 +1,144 @@
+You can find the latest original documentation at
+http://gentoo.neysx.org/mystuff/gorg/gorg.xml
+
+
+
+How to install Gorg
+
+Xavier Neys  Author
+
+1. Introduction
+
+Gorg allows you to serve your own local copy of http://www.gentoo.org. It can
+use either a cgi or a fastcgi script with apache, or even use its own
+stand-alone web server. Its name is short for Gentoo.org.
+
+Of course, it can also be used in any other environment to apply XSL to some XML.
+
+Gorg has been tested with the following packages:
+
+Code Listing 1.1: Test environment
+
+[ebuild   R   ] net-www/apache-2.0.53
+[ebuild   R   ] net-www/mod_fcgid-1.05
+[ebuild   R   ] dev-lang/ruby-1.8.2
+[ebuild   R   ] dev-libs/fcgi-2.4.0
+[ebuild   R   ] dev-ruby/ruby-fcgi-0.8.5-r1
+[ebuild   R   ] dev-libs/libxml2-2.6.18
+[ebuild   R   ] dev-libs/libxslt-1.1.13
+
+Note: At the time of writing, mod_fcgid was not in Portage yet. Please see
+http://bugs.gentoo.org/show_bug.cgi?id=79313 for an ebuild
+
+2. Installing Gorg
+
+Download the gorg ebuild and drop it into your Portage overlay.
+
+Compute its digest with ebuild gorg-0.5.ebuild digest. This command will
+download the tarball automatically. Finally, run emerge gorg.
+
+Gorg uses the apache2 and fastcgi USE flags.
+
+3. Configuring Gorg
+
+Configuring apache 
+
+You may skip this section if you are not going to use apache at all.
+
+If you want to use fastcgi, which you should anyway, you'll need to add -D
+FCGID to the APACHE2_OPTS variable in /etc/conf.d/apache2.
+
+Then, integrate the apache configuration directives from the provided sample
+vhost configuration file /etc/gorg/vhost.sample into your own apache configuration.
+Comments in the sample config file will guide you.
+
+Configuring Gorg 
+
+Create a copy of the sample config file /etc/gorg/gorg.conf.sample named /etc/
+gorg/gorg.conf and edit it. Comments will help you define your own parameters.
+
+If you do not want to use the default /etc/gorg/gorg.conf config file, you'll
+need to define an environment variable called GORG_CONF that points to the
+config file.
+
+Getting the missing files 
+
+Assuming you'll serve your local copy of CVS, or a copy if, or symlinks to it,
+you need to download some files from the dyn directory.
+
+Code Listing 3.1: Get the missing files
+
+# cd to your htdocs directory
+$ cd /path/to/your/document/root
+/htdocs $ mkdir -p dyn/icons
+/htdocs $ cd dyn
+/htdocs $ wget -O news-index.xml http://www.gentoo.org/dyn/news-index.xml?passthru=1
+# If you also want the icon pages
+/htdocs $ wget -O icons.xml http://www.gentoo.org/dyn/icons.xml?passthru=1
+/htdocs $ for FFF in `grep '\.xml"' icons.xml|sed 's:.*\([A-Z2]\{3\}\.xml\).*:\1:'`;do wget -O icons/$FFF http://www.gentoo.org/dyn/icons/$FFF?passthru=1;done
+/htdocs $ cd ..
+# If you ever need other data from the dyn pages,
+# I am sure you get the picture on how to do it.
+
+
+You also need to make the pictures available to your browser. The images
+directory is one level above htdocs. Just define a symlink to it and you're
+set.
+
+Code Listing 3.2: Make a symlink to the pictures
+
+/htdocs $ ln -si ../images images
+# It should look like this:
+/htdocs $ $ ls -l
+drwxr-xr-x   3 neysx users  128 Sep 14 17:45 css
+drwxr-xr-x  31 neysx users  744 Oct 26 00:03 doc
+drwxr-xr-x   3 neysx users  544 Nov  2 16:53 dtd
+drwxr-xr-x   3 neysx users  168 Nov  3 16:24 dyn
+-rw-r--r--   1 neysx users 1406 Jun  7  2003 favicon.ico
+lrwxrwxrwx   1 neysx users   10 Oct 21 22:29 images -> ../images/
+-rw-r--r--   1 neysx users  190 Nov  9  2002 index.xml
+drwxr-xr-x  16 neysx users  384 Apr  1  2004 main
+drwxr-xr-x  17 neysx users 6960 Nov  3 15:34 news
+drwxr-xr-x   8 neysx users  192 Oct 23 14:52 proj
+drwxr-xr-x   4 neysx users   96 Sep 17 14:05 security
+drwxr-xr-x   3 neysx users  736 Nov  2 16:40 xsl
+
+# Your local CVS probably shows a few more entries, but at least
+# those mentioned above should be available and kept up-to-date.
+# Also remember to keep your images directory current.
+
+
+4. Running Gorg
+
+The stand-alone web server 
+
+The easiest way to try it out is to run gorg. It should display something like:
+
+Code Listing 4.1: Run Gorg
+
+$ gorg
+
+
+Starting the Gorg web server on port 8008
+
+Hit Ctrl-C or type "kill 31479" to stop it
+
+
+Point your browser to http://localhost:8008 and you should see your favourite
+site.
+
+With apache 
+
+Restart apache (/etc/init.d/apache2 restart) and visit http://localhost
+assuming you're installing on your own workstation.
+
+If it doesn't work, try the stand-alone web server (type gorg). If this doesn't
+work either, check your /etc/gorg/gorg.conf config file. If it does work,
+please check your apache config files and your logs. Also check that the cache directory
+defined in your gorg config file exists and is writable to your apache user.
+If all fails, contact me.
+
+
+
+The contents of this document are licensed under the Creative Commons -
+Attribution / Share Alike license.
