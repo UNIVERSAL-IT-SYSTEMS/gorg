@@ -153,6 +153,7 @@ void *XRootOpen (const char *filename, const char* rw) {
   int  rbxrootLen=0;
   char empty[] = "<?xml version='1.0'?><missing file='%s'/>";
   int  pip[2];
+  ssize_t result = 0;
   struct stat notused;
 
 //printf("NSX-RootOpen: %s\n", filename);
@@ -220,7 +221,8 @@ void *XRootOpen (const char *filename, const char* rw) {
       if (path == NULL)
         return NULL;
       sprintf(fakexml, empty, filename);
-      write(pip[1], fakexml, strlen(fakexml));
+      result = write(pip[1], fakexml, strlen(fakexml));
+      assert(result = strlen(fakexml));
       close(pip[1]);
       free(fakexml);
       return (void *) fdopen(pip[0], "r");
@@ -297,7 +299,8 @@ int looksLikeXML(VALUE v)
          || (strstr(RSTRING_PTR(v), "\n"));
 //            We could also try with " " but some are stupid enough to use spaces in filenames
 }
- 
+
+#ifdef DEBUG
 // I got stumped and needed this ;-)
 void dumpCleanup(char * str, struct S_cleanup c)
 {
@@ -310,6 +313,7 @@ printf( "%s\n"
         "\ndocstr=%08x"
         "\n=======================\n", str, c.params, c.docxml, c.docxsl, c.docres, c.xsl, c.docstr);
 }
+#endif
 
 /*
  *  my_raise : cleanup and raise ruby exception
@@ -352,7 +356,9 @@ void my_raise(VALUE obj, s_cleanup *clean, VALUE rbExcep, char *err)
   
   if (clean)
   {
-    //dumpCleanup("Freeing pointers", *clean);
+#ifdef DEBUG
+    dumpCleanup("Freeing pointers", *clean);
+#endif
     free(clean->params);
     xmlFree(clean->docstr);
     xmlFreeDoc(clean->docres);
@@ -707,7 +713,7 @@ static VALUE in_sync(VALUE self)
 
 VALUE xsl_process(VALUE self)
 {
-  rb_iterate(in_sync, g_mutex, xsl_process_real, self);
+  return rb_iterate(in_sync, g_mutex, xsl_process_real, self);
 }
 
 /*

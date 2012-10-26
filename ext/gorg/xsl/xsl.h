@@ -22,6 +22,8 @@
 #define __XSL_H__
 
 #include <sys/stat.h>
+#include <assert.h>
+#include <unistd.h>
 #include <ruby.h>
 #include <libxslt/xslt.h>
 #include <libexslt/exslt.h>
