@@ -1,1 +1,8 @@
+# ctags file
 TAGS
+
+# Generated and compiled targets for extension
+ext/gorg/xsl/Makefile
+ext/gorg/xsl/mkmf.log
+ext/gorg/xsl/xsl.o
+ext/gorg/xsl/xsl.so
