@@ -383,7 +383,7 @@ void my_raise(VALUE obj, s_cleanup *clean, VALUE rbExcep, char *err)
   // Raise exception if requested to
   if (rbExcep != Qnil)
   {
-    rb_raise(rbExcep, err);
+    rb_raise(rbExcep, "%s", err);
   }
 }
 
