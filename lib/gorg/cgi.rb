@@ -59,7 +59,17 @@ module Gorg
         path_info = cgi.env_table['SCRIPT_NAME']
       end
       query = Hash.new
-      cgi.params.each{ |p, v| query[p] = v.to_s}
+      cgi.params.each do |p, v|
+        # fcgi 0.9 always provides an Array even with one
+        # argument. Gorg only handles one argument, as far as I can
+        # tell, so we take the first value in that case.
+        value = if v.class == Array
+                  v.first
+                else
+                  v
+                end
+        query[p] = value.to_s
+      end
       # Get DOCUMENT_ROOT from environment
       $Config["root"] = cgi.env_table['DOCUMENT_ROOT']
 
